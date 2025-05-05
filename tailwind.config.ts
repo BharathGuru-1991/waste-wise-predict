@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,45 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom eco colors
+				eco: {
+					green: {
+						50: '#f0f9f0',
+						100: '#dcf0dc',
+						200: '#b9e2b9',
+						300: '#8ece8e',
+						400: '#5cb85c',
+						500: '#4caf50',
+						600: '#3e8e41',
+						700: '#326e34',
+						800: '#294f29',
+						900: '#1e3e1e',
+					},
+					blue: {
+						50: '#e6f3f9',
+						100: '#cce7f3',
+						200: '#99cfe7',
+						300: '#66b7db',
+						400: '#339fcf',
+						500: '#1E88E5',
+						600: '#167cd4',
+						700: '#1265ae',
+						800: '#0d4e88',
+						900: '#093762',
+					},
+					brown: {
+						50: '#f8f5f1',
+						100: '#f1ebe3',
+						200: '#e3d7c6',
+						300: '#d5c4aa',
+						400: '#c7b08d',
+						500: '#b99c71',
+						600: '#a88c5c',
+						700: '#8a734b',
+						800: '#6c5a3a',
+						900: '#4e4029',
+					}
 				}
 			},
 			borderRadius: {
