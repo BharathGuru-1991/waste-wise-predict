@@ -15,9 +15,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { PredictionOutput } from "@/lib/waste-prediction";
 
 interface PredictionFormProps {
-  onPredict: (input: PredictionInput) => void;
+  onPredict: (input: PredictionInput) => PredictionOutput;
 }
 
 export default function PredictionForm({ onPredict }: PredictionFormProps) {
