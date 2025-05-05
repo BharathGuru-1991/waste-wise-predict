@@ -9,7 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          organization: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          organization?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          organization?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      waste_predictions: {
+        Row: {
+          created_at: string
+          day_of_week: string
+          id: string
+          meal_type: string
+          pickup_window: string | null
+          predicted_waste_kg: number
+          special_event: boolean | null
+          students_served: number
+          user_id: string
+          waste_types: Json | null
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: string
+          id?: string
+          meal_type: string
+          pickup_window?: string | null
+          predicted_waste_kg: number
+          special_event?: boolean | null
+          students_served: number
+          user_id: string
+          waste_types?: Json | null
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string
+          id?: string
+          meal_type?: string
+          pickup_window?: string | null
+          predicted_waste_kg?: number
+          special_event?: boolean | null
+          students_served?: number
+          user_id?: string
+          waste_types?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

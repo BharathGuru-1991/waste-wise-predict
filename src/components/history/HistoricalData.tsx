@@ -1,21 +1,73 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getHistoricalData, getDayName } from "@/lib/waste-prediction";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AreaChart, BarChart } from "@/components/ui/charts";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { toast } from "@/components/ui/use-toast";
 
 export default function HistoricalData() {
+  const { user } = useAuth();
   const [data, setData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [mealFilter, setMealFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch historical data
-    const historicalData = getHistoricalData(14);
-    setData(historicalData);
-    setFilteredData(historicalData);
-  }, []);
+    async function fetchUserPredictions() {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch user's saved predictions from Supabase
+        const { data: savedPredictions, error } = await supabase
+          .from("waste_predictions")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (error) throw error;
+        
+        if (savedPredictions && savedPredictions.length > 0) {
+          // Format data to match expected structure
+          const formattedData = savedPredictions.map(prediction => ({
+            id: prediction.id,
+            date: new Date(prediction.created_at).toISOString().split('T')[0],
+            dayOfWeek: getDayOfWeekFromName(prediction.day_of_week),
+            mealType: prediction.meal_type,
+            totalWasteKg: prediction.predicted_waste_kg,
+            wasteByType: prediction.waste_types || []
+          }));
+          
+          setData(formattedData);
+          setFilteredData(formattedData);
+        } else {
+          // If no saved data, use mock data
+          const historicalData = getHistoricalData(14);
+          setData(historicalData);
+          setFilteredData(historicalData);
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error loading history",
+          description: error.message,
+          variant: "destructive"
+        });
+        
+        // Fallback to mock data
+        const historicalData = getHistoricalData(14);
+        setData(historicalData);
+        setFilteredData(historicalData);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchUserPredictions();
+  }, [user]);
 
   useEffect(() => {
     if (mealFilter === "all") {
@@ -24,6 +76,12 @@ export default function HistoricalData() {
       setFilteredData(data.filter(item => item.mealType === mealFilter));
     }
   }, [mealFilter, data]);
+
+  // Helper function to convert day name to number
+  function getDayOfWeekFromName(dayName: string): number {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return days.indexOf(dayName);
+  }
 
   // Prepare data for trend chart - aggregate by day
   const trendData = filteredData.reduce((acc: any[], item) => {
@@ -47,6 +105,14 @@ export default function HistoricalData() {
       .reduce((sum, item) => sum + item.totalWasteKg, 0) / 
       Math.max(1, data.filter(item => item.mealType === meal).length) * 10) / 10
   }));
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <p>Loading historical data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -78,7 +144,7 @@ export default function HistoricalData() {
             <CardHeader>
               <CardTitle>Food Waste Trends</CardTitle>
               <CardDescription>
-                Historical food waste data over the past 14 days
+                Historical food waste data over time
               </CardDescription>
             </CardHeader>
             <CardContent>
