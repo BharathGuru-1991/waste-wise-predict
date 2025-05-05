@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PredictionOutput } from "@/lib/waste-prediction";
-import { BarChart, PieChart } from "@/components/ui/chart";
+import { BarChart, PieChart } from "@/components/ui/charts";
 import { Badge } from "@/components/ui/badge";
 
 interface PredictionResultsProps {
