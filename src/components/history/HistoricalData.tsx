@@ -1,109 +1,83 @@
-
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getHistoricalData, getDayName } from "@/lib/waste-prediction";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AreaChart, BarChart } from "@/components/ui/charts";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "@/components/ui/use-toast";
 
 export default function HistoricalData() {
-  const { user } = useAuth();
   const [data, setData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [mealFilter, setMealFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchUserPredictions() {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        
-        // Fetch user's saved predictions from Supabase
-        const { data: savedPredictions, error } = await supabase
-          .from("waste_predictions")
-          .select("*")
-          .order("created_at", { ascending: false });
-        
-        if (error) throw error;
-        
-        if (savedPredictions && savedPredictions.length > 0) {
-          // Format data to match expected structure
-          const formattedData = savedPredictions.map(prediction => ({
-            id: prediction.id,
-            date: new Date(prediction.created_at).toISOString().split('T')[0],
-            dayOfWeek: getDayOfWeekFromName(prediction.day_of_week),
-            mealType: prediction.meal_type,
-            totalWasteKg: prediction.predicted_waste_kg,
-            wasteByType: prediction.waste_types || []
-          }));
-          
-          setData(formattedData);
-          setFilteredData(formattedData);
-        } else {
-          // If no saved data, use mock data
-          const historicalData = getHistoricalData(14);
-          setData(historicalData);
-          setFilteredData(historicalData);
-        }
-      } catch (error: any) {
-        toast({
-          title: "Error loading history",
-          description: error.message,
-          variant: "destructive"
-        });
-        
-        // Fallback to mock data
-        const historicalData = getHistoricalData(14);
-        setData(historicalData);
-        setFilteredData(historicalData);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      setLoading(true);
+      // Use mock data directly
+      const historicalData = getHistoricalData(14);
+      setData(historicalData);
+      setFilteredData(historicalData);
+    } catch (error: any) {
+      toast({
+        title: "Error loading history",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    
-    fetchUserPredictions();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (mealFilter === "all") {
       setFilteredData(data);
     } else {
-      setFilteredData(data.filter(item => item.mealType === mealFilter));
+      setFilteredData(data.filter((item) => item.mealType === mealFilter));
     }
   }, [mealFilter, data]);
 
-  // Helper function to convert day name to number
-  function getDayOfWeekFromName(dayName: string): number {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    return days.indexOf(dayName);
-  }
-
   // Prepare data for trend chart - aggregate by day
-  const trendData = filteredData.reduce((acc: any[], item) => {
-    const existingDay = acc.find(d => d.date === item.date);
-    if (existingDay) {
-      existingDay.waste += item.totalWasteKg;
-    } else {
-      acc.push({
-        date: item.date,
-        day: getDayName(item.dayOfWeek),
-        waste: item.totalWasteKg
-      });
-    }
-    return acc;
-  }, []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const trendData = filteredData
+    .reduce((acc: any[], item) => {
+      const existingDay = acc.find((d) => d.date === item.date);
+      if (existingDay) {
+        existingDay.waste += item.totalWasteKg;
+      } else {
+        acc.push({
+          date: item.date,
+          day: getDayName(item.dayOfWeek),
+          waste: item.totalWasteKg,
+        });
+      }
+      return acc;
+    }, [])
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // Prepare data for meal comparison
-  const mealComparisonData = ["Breakfast", "Lunch", "Dinner"].map(meal => ({
+  const mealComparisonData = ["Breakfast", "Lunch", "Dinner"].map((meal) => ({
     name: meal,
-    average: Math.round(data.filter(item => item.mealType === meal)
-      .reduce((sum, item) => sum + item.totalWasteKg, 0) / 
-      Math.max(1, data.filter(item => item.mealType === meal).length) * 10) / 10
+    average:
+      Math.round(
+        (data
+          .filter((item) => item.mealType === meal)
+          .reduce((sum, item) => sum + item.totalWasteKg, 0) /
+          Math.max(1, data.filter((item) => item.mealType === meal).length)) *
+          10
+      ) / 10,
   }));
 
   if (loading) {
@@ -138,7 +112,7 @@ export default function HistoricalData() {
           <TabsTrigger value="trends">Waste Trends</TabsTrigger>
           <TabsTrigger value="meals">Meal Comparison</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="trends">
           <Card>
             <CardHeader>
@@ -162,7 +136,9 @@ export default function HistoricalData() {
                     return (
                       <div className="bg-white p-2 border rounded shadow">
                         <p className="font-medium">{payload[0].payload.day}</p>
-                        <p className="text-eco-green-600">{payload[0].value} kg</p>
+                        <p className="text-eco-green-600">
+                          {payload[0].value} kg
+                        </p>
                       </div>
                     );
                   }}
@@ -171,7 +147,7 @@ export default function HistoricalData() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="meals">
           <Card>
             <CardHeader>
