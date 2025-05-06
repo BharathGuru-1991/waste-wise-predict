@@ -6,6 +6,7 @@ import Index from "./pages/Index";
 import History from "./pages/History";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
+import Cuisine from "./pages/Cuisine";
 import NotFound from "./pages/NotFound";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -23,6 +24,8 @@ const App = () => {
             <Route path="/history" element={<History />} />
             <Route path="/data" element={<Data />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/cuisine" element={<Cuisine />} /> 
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
